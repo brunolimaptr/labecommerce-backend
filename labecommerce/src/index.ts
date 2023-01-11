@@ -20,27 +20,72 @@ app.get("/ping", (req: Request, res: Response)=>{
 
 
 app.get("/user", (req: Request, res: Response)=>{
-    res.status(200).send(user)
-})
+    try{
+        const id = req.body.id
+        
+         res.status(200).send(user)
+       
+    }
+    catch (error: any) {
+        console.log(error)
 
+        if(res.statusCode === 200) {
+            res.status(500)
+        }
+        res.send(error.message)
+        
+    }
+})
 
 app.get("/product", (req: Request, res: Response)=>{
-    res.status(200).send(product)
+    try{
+        const id = req.body.id
+    
+        res.status(200).send(product)
+    }
+    catch (error: any) {
+        console.log(error)
+
+        if(res.statusCode === 200) {
+            res.status(500)
+        }
+        res.send(error.message)
+        
+    }
 })
+
 
 
 app.get("/product/search", (req: Request, res: Response)=>{
-   const q = req.query.q as string
+   try{
+    const q = req.query.q as string
+
+    if(q.length>0){
 
    const result: Tproduct[] = product.filter(
     (produtos)=> produtos.name.toLowerCase().includes(q.toLowerCase()))
-
+   
     res.status(200).send(result)
+   }else{
+    res.status(404)
+    throw new Error("query params deve possuir pelo menos um caractere")
+   }
+   }
+   catch (error: any) {
+    console.log(error)
+
+    if(res.statusCode === 200) {
+        res.status(500)
+    }
+    res.send(error.message)
+    
+}
 })
 
 
 app.post("/user", (req: Request, res: Response)=>{
 
+try{
    const id = req.body.id as string
    const email = req.body.email as string
    const password = req.body.password as string
@@ -50,15 +95,35 @@ app.post("/user", (req: Request, res: Response)=>{
     email,
     password
    }
+  
+const userId = user.find((users)=> users.id === id)
+const userEmail = user.find((users)=> users.email === email)
 
-   user.push(newUser)
+   if(userId){
+    res.status(400)
+    throw new Error("Id já utilizado.")
+   }
+    if(userEmail){
+    res.status(400)
+    throw new Error("email já utilizado.")
+}else{
+    user.push(newUser)
+    res.status(201).send("Cadastro realizado com sucesso")
+}
+}catch (error) {
+    console.log(error)
+    if(res.statusCode === 200){
+        res.status(500)
+        }
+        res.send(error.message)
+    
+}
 
-   res.status(201).send("Cadastro realizado com sucesso")
 })
 
 
 app.post("/product", (req: Request, res: Response)=>{
-
+try{
     const id = req.body.id as string
     const name = req.body.name as string 
     const price = req.body.price as number
@@ -70,15 +135,29 @@ app.post("/product", (req: Request, res: Response)=>{
      price,
      category
     }
- 
+
+    const productId = product.find((products)=> products.id === id)
+
+    if(productId){
+        res.status(400)
+        throw new Error("Id já utilizado.")
+       }else{
     product.push(newProduct)
- 
     res.status(201).send("Cadastro realizado com sucesso")
+}
+}catch (error) {
+    console.log(error)
+    if(res.statusCode === 200){
+        res.status(500)
+        }
+        res.send(error.message)
+    
+}
  })
 
 
  app.post("/purchase", (req: Request, res: Response)=>{
-
+try{
    const userId = req.body.userId as string
    const productId =  req.body.productId as string
    const quantity = req.body.quantity as number
@@ -98,22 +177,39 @@ app.post("/product", (req: Request, res: Response)=>{
     purchase.push(newPurchase)
  
     res.status(201).send("Cadastro realizado com sucesso")
+}catch (error) {
+    console.log(error)
+    if(res.statusCode === 200){
+        res.status(500)
+        }
+        res.send(error.message)
+    
+}
  })
 
 
 
  app.get("/product/:id", (req: Request, res: Response)=>{
-
+try{
     const id = req.params.id
+
     const result = product.find((produtos)=>{
         return produtos.id === id
     })
     res.status(200).send(result)
+}catch (error) {
+    console.log(error)
+    if(res.statusCode === 200){
+        res.status(500)
+        }
+        res.send(error.message)
+    
+}
 })
 
 
 app.get("/users/:id/purchase", (req: Request, res: Response)=>{
-
+try{
     const id = req.params.id
     const result = user.find((user)=>{
         return user.id === id
@@ -125,12 +221,19 @@ app.get("/users/:id/purchase", (req: Request, res: Response)=>{
     if(getPurchase)
     res.status(200).send(getPurchase)
     }
+}catch (error) {
+    console.log(error)
+    if(res.statusCode === 200){
+        res.status(500)
+        }
+        res.send(error.message)
     
+}
 })
 
 
 app.delete("/user/:id", (req: Request, res: Response)=>{
-
+try{
     const id = req.params.id
     const userIndex = user.findIndex((users)=>{
         return users.id === id
@@ -143,12 +246,19 @@ app.delete("/user/:id", (req: Request, res: Response)=>{
     }else{
         res.status(200).send("item não encontrado")
     }
+}catch (error) {
+    console.log(error)
+    if(res.statusCode === 200){
+        res.status(500)
+        }
+        res.send(error.message)
     
+}
 })
 
 
 app.delete("/product/:id", (req: Request, res: Response)=>{
-
+try{
     const id = req.params.id
     const productIndex = product.findIndex((produtos)=>{
         return produtos.id === id
@@ -162,12 +272,20 @@ app.delete("/product/:id", (req: Request, res: Response)=>{
     }else{
         res.status(200).send("item não encontrado")
     }
+}catch (error) {
+    console.log(error)
+    if(res.statusCode === 200){
+        res.status(500)
+        }
+        res.send(error.message)
     
+}  
 })
 
 
 
 app.put("/user/:id", (req: Request, res: Response)=>{
+ try{
     const id = req.params.id
 
     const newId = req.body.id as string | undefined
@@ -186,10 +304,19 @@ app.put("/user/:id", (req: Request, res: Response)=>{
   }else{
     res.status(200).send("item não encontrado")
   }
+}catch (error) {
+    console.log(error)
+    if(res.statusCode === 200){
+        res.status(500)
+        }
+        res.send(error.message)
+    
+}
 })
 
 
 app.put("/product/:id", (req: Request, res: Response)=>{
+    try{
     const id = req.params.id
 
     const newId = req.body.id as string | undefined
@@ -210,4 +337,12 @@ app.put("/product/:id", (req: Request, res: Response)=>{
   }else{
     res.status(200).send("item não encontrado")
   }
+}catch (error) {
+    console.log(error)
+    if(res.statusCode === 200){
+        res.status(500)
+        }
+        res.send(error.message)
+    
+}
 })
