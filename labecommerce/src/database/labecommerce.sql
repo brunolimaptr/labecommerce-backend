@@ -8,6 +8,7 @@ CREATE TABLE users (
 );
 
 
+<<<<<<< HEAD
 INSERT INTO users (id,email, password)
 VALUES 
 	(1,  "fulana@email.com", "fulana2001"),
@@ -41,6 +42,7 @@ SELECT * FROM users;
 
 
 SELECT * FROM products;
+
 
 
 SELECT * FROM products
