@@ -96,3 +96,41 @@ ORDER BY price ASC;
 
 
 
+-----------------------------------------------
+
+
+CREATE TABLE purchases (
+	id TEXT PRIMARY KEY UNIQUE NOT NULL,
+	total_price REAL UNIQUE NOT NULL,
+	paid INTEGER NOT NULL,
+    delivered_at TEXT,
+	buyer_id TEXT NOT NULL,
+	FOREIGN KEY (buyer_id) REFERENCES users (id)
+);
+
+
+INSERT INTO purchases (id, total_price, paid, buyer_id )
+VALUES 
+	("p1", 200000, 0,  "1"),
+	("p2", 300000, 0,  "1"),
+	("p3", 500000, 0,  "2"),
+	("p4", 400000, 0,  "2"),
+	("p5", 800000, 0,  "4"),
+	("p6", 100000, 0,  "4");
+
+SELECT * FROM purchases;
+
+UPDATE purchases
+SET delivered_at = DATETIME ("NOW")
+WHERE id = "p1";
+
+
+DELETE FROM purchases;
+
+DROP TABLE purchases;
+
+
+SELECT * FROM purchases
+INNER JOIN users
+ON purchases.buyer_id = users.id
+WHERE purchases.id = "p1";
