@@ -4,6 +4,7 @@ import { purchase } from "./database";
 import express, { Request, Response} from "express"
 import cors from "cors"
 import { Tproduct, TUser, Tpurchase, CATEGORIAS } from "./types";
+import {db} from "./database/knex"
 
 const app = express()
 app.use(cors())
@@ -19,17 +20,18 @@ app.get("/ping", (req: Request, res: Response)=>{
 })
 
 
-app.get("/user", (req: Request, res: Response)=>{
+app.get("/users", async (req: Request, res: Response)=>{
     try{
-        const id = req.body.id
-        
-         res.status(200).send(user)
+        // const id = req.body.id
+        const result = await db.raw(`SELECT * FROM users`)
+
+         res.status(200).send(result)
        
     }
     catch (error: any) {
         console.log(error)
 
-        if(res.statusCode === 200) {
+        if(req.statusCode === 200) {
             res.status(500)
         }
         res.send(error.message)
@@ -37,34 +39,40 @@ app.get("/user", (req: Request, res: Response)=>{
     }
 })
 
-app.get("/product", (req: Request, res: Response)=>{
+app.get("/product", async (req: Request, res: Response)=>{
     try{
-        const id = req.body.id
+        // const id = req.body.id
+    const result = await db.raw(`SELECT * FROM products`)
     
-        res.status(200).send(product)
+        res.status(200).send(result)
     }
     catch (error: any) {
         console.log(error)
 
-        if(res.statusCode === 200) {
+        if(req.statusCode === 200) {
             res.status(500)
         }
+        if(error instanceof Error){
         res.send(error.message)
-        
+        }
     }
 })
 
 
 
-app.get("/product/search", (req: Request, res: Response)=>{
+app.get("/product/search", async (req: Request, res: Response)=>{
    try{
     const q = req.query.q as string
 
     if(q.length>0){
 
-   const result: Tproduct[] = product.filter(
-    (produtos)=> produtos.name.toLowerCase().includes(q.toLowerCase()))
+//    const result: Tproduct[] = product.filter(
+//     (produtos)=> produtos.name.toLowerCase().includes(q.toLowerCase()))
+
+   const result = await db.raw(`SELECT * FROM products 
+   WHERE name LIKE "%${q}%";`)
    
+
     res.status(200).send(result)
    }else{
     res.status(404)
@@ -74,7 +82,7 @@ app.get("/product/search", (req: Request, res: Response)=>{
    catch (error: any) {
     console.log(error)
 
-    if(res.statusCode === 200) {
+    if(req.statusCode === 200) {
         res.status(500)
     }
     res.send(error.message)
@@ -83,7 +91,7 @@ app.get("/product/search", (req: Request, res: Response)=>{
 })
 
 
-app.post("/user", (req: Request, res: Response)=>{
+app.post("/users", async (req: Request, res: Response)=>{
 
 try{
    const id = req.body.id as string
@@ -96,14 +104,20 @@ try{
     password
    }
   
-const userId = user.find((users)=> users.id === id)
-const userEmail = user.find((users)=> users.email === email)
+// const userId = user.find((users)=> users.id === id)
+// const userEmail = user.find((users)=> users.email === email)
 
-   if(userId){
+await db.raw(`
+INSERT INTO users (id, email, password)
+VALUES 
+	("${id}", "${email}", "${password}")
+`)
+
+   if(id){
     res.status(400)
     throw new Error("Id já utilizado.")
    }
-    if(userEmail){
+    if(email){
     res.status(400)
     throw new Error("email já utilizado.")
 }else{
@@ -122,7 +136,7 @@ const userEmail = user.find((users)=> users.email === email)
 })
 
 
-app.post("/product", (req: Request, res: Response)=>{
+app.post("/product", async(req: Request, res: Response)=>{
 try{
     const id = req.body.id as string
     const name = req.body.name as string 
@@ -136,9 +150,15 @@ try{
      category
     }
 
-    const productId = product.find((products)=> products.id === id)
+    // const productId = product.find((products)=> products.id === id)
 
-    if(productId){
+await db.raw(`
+INSERT INTO products (id, name, price, category)
+VALUES 
+	("${id}", "${name}", "${price}", "${category}")
+`)
+
+    if(id){
         res.status(400)
         throw new Error("Id já utilizado.")
        }else{
@@ -156,8 +176,8 @@ try{
  })
 
 
- app.post("/purchase", (req: Request, res: Response)=>{
-try{
+ app.post("/purchase", async (req: Request, res: Response)=>{
+ try{
    const userId = req.body.userId as string
    const productId =  req.body.productId as string
    const quantity = req.body.quantity as number
@@ -165,14 +185,20 @@ try{
    const cor = req.body.cor as string
    const teto = req.body.teto as string
  
-    const newPurchase: Tpurchase ={
-     userId,
-     productId,
-     quantity,
-     totalPrice,
-     cor,
-     teto
-    }
+    // const newPurchase: Tpurchase ={
+    //  userId,
+    //  productId,
+    //  quantity,
+    //  totalPrice,
+    //  cor,
+    //  teto
+    // }
+
+    const newPurchase = await db.raw(`
+    INSERT INTO products (id, name, price, category)
+    VALUES 
+        ("${userId}", "${productId}", "${quantity}", "${totalPrice}, "${cor}", "${teto}")
+    `)
  
     purchase.push(newPurchase)
  
@@ -189,13 +215,17 @@ try{
 
 
 
- app.get("/product/:id", (req: Request, res: Response)=>{
+ app.get("/product/:id", async (req: Request, res: Response)=>{
 try{
     const id = req.params.id
 
-    const result = product.find((produtos)=>{
-        return produtos.id === id
-    })
+    // const result = product.find((produtos)=>{
+    //     return produtos.id === id
+    // })
+
+const result = await db.raw(`SELECT * FROM products 
+WHERE name WHERE "${id}";`)
+
     res.status(200).send(result)
 }catch (error) {
     console.log(error)
@@ -208,12 +238,16 @@ try{
 })
 
 
-app.get("/users/:id/purchase", (req: Request, res: Response)=>{
+app.get("/users/:id/purchase", async(req: Request, res: Response)=>{
 try{
     const id = req.params.id
-    const result = user.find((user)=>{
-        return user.id === id
-    })
+    // const result = user.find((user)=>{
+    //     return user.id === id
+    // })
+
+    const result = await db.raw(`SELECT * FROM products 
+    WHERE name WHERE "${id}";`)
+
     if(result){
         const getPurchase = purchase.filter((comprar)=>{
             return comprar.userId === result.id
